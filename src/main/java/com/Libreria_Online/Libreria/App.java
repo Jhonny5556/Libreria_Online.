@@ -7,7 +7,7 @@ public class App {
         
         // 1. Inizializziamo i DAO (Gestori del Database)
         LibroDAO libroDAO = new LibroDAO();
-        UtenteDAO utenteDAO = new UtenteDAO(); // <--- NUOVO: Gestore Utenti
+        UtenteDAO utenteDAO = new UtenteDAO(); // <--- NUOVO: Gestore Utenti.
 
         // 2. Avviamo il Server
         Javalin app = Javalin.create(config -> {
