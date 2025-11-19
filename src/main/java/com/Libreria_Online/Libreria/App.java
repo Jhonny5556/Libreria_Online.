@@ -60,7 +60,20 @@ public class App {
                 ctx.status(404).result("Non trovato");
             }
         });
-
+     // API LOGIN
+        app.post("/api/login", ctx -> {
+            // Riceviamo i dati dal form HTML (nome, password, ruolo)
+            Utente credenziali = ctx.bodyAsClass(Utente.class);
+            
+            // Chiediamo al DAO se esiste
+            Utente utenteLoggato = utenteDAO.login(credenziali.nome, credenziali.password, credenziali.ruolo);
+            
+            if (utenteLoggato != null) {
+                ctx.json(utenteLoggato); // Login OK, restituiamo l'utente
+            } else {
+                ctx.status(401).json("{\"messaggio\": \"Credenziali errate!\"}"); // Login fallito
+            }
+        });
 
         // 1. GET - Lista utenti
         app.get("/api/utenti", ctx -> ctx.json(utenteDAO.getAllUtenti()));

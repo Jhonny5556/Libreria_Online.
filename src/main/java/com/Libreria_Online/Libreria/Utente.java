@@ -7,15 +7,18 @@ public class Utente {
     public String genere;
     public int eta;
     public String ruolo;
+    public String password; // <--- NUOVO CAMPO
 
     public Utente() {}
 
-    public Utente(int utente_id, String nome, String cognome, String genere, int eta, String ruolo) {
+    // Aggiorniamo il costruttore
+    public Utente(int utente_id, String nome, String cognome, String genere, int eta, String ruolo, String password) {
         this.utente_id = utente_id;
         this.nome = nome;
         this.cognome = cognome;
         this.genere = genere;
         this.eta = eta;
         this.ruolo = ruolo;
+        this.password = password;
     }
 }

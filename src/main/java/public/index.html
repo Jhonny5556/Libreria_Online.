@@ -2,71 +2,180 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <title>Libreria Online</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>Gestione Libreria</title>
+   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script src="main.js"></script>
+    <style>
+        .section { display: none; } 
+        .active { display: block; } 
+        .admin-only { display: none; } 
+    </style>
 </head>
 <body class="bg-light">
 
-<div class="container mt-5">
-    <h1 class="text-center mb-4">📚 Gestione Libreria</h1>
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary d-none" id="mainNav">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="#">📚 Libreria Online</a>
+    
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
 
-    <div class="text-center mb-4">
-        <button onclick="caricaLibri()" class="btn btn-primary">Mostra Libri</button>
-        <button onclick="popolaDati()" class="btn btn-warning">Popola Database (Generatore)</button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item">
+            <a class="nav-link" href="#" onclick="showSection('libri')" data-i18n="nav_libri">📖 Catalogo Libri</a>
+        </li>
+        <li class="nav-item" id="nav-utenti" style="display:none">
+            <a class="nav-link" href="#" onclick="showSection('utenti')" data-i18n="nav_utenti">👥 Gestione Utenti</a>
+        </li>
+        <li class="nav-item" id="nav-prestiti" style="display:none">
+            <a class="nav-link" href="#" onclick="showSection('prestiti')" data-i18n="nav_prestiti">📅 Registro Prestiti</a>
+        </li>
+        <li class="nav-item" id="nav-stats" style="display:none">
+    <a class="nav-link" href="#" onclick="showSection('stats')" data-i18n="nav_stats">📊 Statistiche</a>
+</li>
+      </ul>
+      
+      <div class="d-flex align-items-center">
+        <button onclick="cambiaLingua('it')" class="btn btn-link text-decoration-none fs-5 p-0 me-2" title="Italiano">IT</button>
+        <button onclick="cambiaLingua('en')" class="btn btn-link text-decoration-none fs-5 p-0 me-3" title="English">EN</button>
+
+        <span class="navbar-text text-white me-3" id="welcomeMsg"></span>
+        <button class="btn btn-danger btn-sm" onclick="logout()" data-i18n="btn_logout">Esci</button>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div class="container mt-4">
+
+    <div id="login-section" class="section active">
+        <div class="card mx-auto shadow-lg" style="max-width: 400px; margin-top: 80px;">
+            <div class="card-header bg-primary text-white text-center">
+                <h4 data-i18n="login_title">🔐 Accesso Libreria</h4>
+            </div>
+            <div class="card-body">
+                <label class="form-label fw-bold" data-i18n="login_who">Chi sei?</label>
+                <div class="d-flex justify-content-around mb-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="ruoloLogin" id="roleAdmin" value="BIBLIOTECARIO">
+                        <label class="form-check-label" for="roleAdmin" data-i18n="role_admin">Bibliotecario (Admin)</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="ruoloLogin" id="roleClient" value="CLIENTE" checked>
+                        <label class="form-check-label" for="roleClient" data-i18n="role_client">Cliente</label>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label data-i18n="lbl_nome">Nome</label>
+                    <input type="text" id="loginNome" class="form-control" placeholder="Il tuo nome">
+                </div>
+                <div class="mb-3">
+                    <label data-i18n="lbl_pass">Password</label>
+                    <input type="password" id="loginPwd" class="form-control" placeholder="La tua password">
+                </div>
+                <button onclick="eseguiLogin()" class="btn btn-primary w-100" data-i18n="btn_login">Accedi</button>
+                <hr>
+                <small class="text-muted d-block text-center" data-i18n="login_footer">Non hai dati? Usa il generatore</small>
+                <button onclick="popolaDati()" class="btn btn-warning btn-sm w-100 mt-2" data-i18n="btn_popola">Popola DB</button>
+            </div>
+        </div>
     </div>
 
-    <table class="table table-striped bg-white shadow-sm rounded">
-        <thead class="table-dark">
-            <tr>
-                <th>ID</th>
-                <th>Titolo</th>
-                <th>Autore</th>
-                <th>Genere</th>
-                <th>Anno</th>
-            </tr>
-        </thead>
-        <tbody id="tabella-libri">
-            </tbody>
-    </table>
+    <div id="libri-section" class="section">
+        <h2 data-i18n="title_libri">📖 Catalogo Libri</h2>
+        <div class="card mb-3 admin-only">
+            <div class="card-body">
+                <h5 data-i18n="card_libri">Aggiungi / Modifica Libro</h5>
+                <div class="row g-2">
+                    <div class="col"><input type="text" id="l_titolo" class="form-control" placeholder="Titolo" data-i18n="ph_titolo"></div>
+                    <div class="col"><input type="text" id="l_autore" class="form-control" placeholder="Autore" data-i18n="ph_autore"></div>
+                    <div class="col"><input type="text" id="l_isbn" class="form-control" placeholder="ISBN"></div>
+                    <div class="col"><input type="number" id="l_anno" class="form-control" placeholder="Anno"></div>
+                    <div class="col"><input type="text" id="l_genere" class="form-control" placeholder="Genere" data-i18n="ph_genere"></div>
+                    <div class="col-auto">
+                        <button id="btn-salva-libro" onclick="salvaLibro()" class="btn btn-success" data-i18n="btn_salva">Salva</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <table class="table table-striped bg-white rounded shadow-sm">
+            <thead class="table-dark">
+                <tr>
+                    <th data-i18n="th_titolo">Titolo</th>
+                    <th data-i18n="th_autore">Autore</th>
+                    <th data-i18n="th_genere">Genere</th>
+                    <th data-i18n="th_azioni">Azioni</th>
+                </tr>
+            </thead>
+            <tbody id="tabella-libri"></tbody>
+        </table>
+    </div>
+
+    <div id="utenti-section" class="section">
+        <h2 data-i18n="title_utenti">👥 Gestione Utenti</h2>
+        <div class="card mb-3">
+            <div class="card-body">
+                <h5 data-i18n="card_utenti">Nuovo / Modifica Utente</h5>
+                <div class="row g-2">
+                    <div class="col"><input type="text" id="u_nome" class="form-control" placeholder="Nome" data-i18n="ph_nome"></div>
+                    <div class="col"><input type="text" id="u_cognome" class="form-control" placeholder="Cognome" data-i18n="ph_cognome"></div>
+                    <div class="col"><select id="u_genere" class="form-select"><option value="M">M</option><option value="F">F</option></select></div>
+                    <div class="col"><input type="number" id="u_eta" class="form-control" placeholder="Età" data-i18n="ph_eta"></div>
+                    <div class="col"><select id="u_ruolo" class="form-select"><option value="CLIENTE">Cliente</option><option value="BIBLIOTECARIO">Bibliotecario</option></select></div>
+                    <div class="col-auto">
+                        <button id="btn-salva-utente" onclick="salvaUtente()" class="btn btn-success" data-i18n="btn_crea">Crea</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <table class="table table-striped bg-white rounded shadow-sm">
+            <thead class="table-dark">
+                <tr>
+                    <th data-i18n="th_nome">Nome</th>
+                    <th data-i18n="th_ruolo">Ruolo</th>
+                    <th data-i18n="th_azioni">Azioni</th>
+                </tr>
+            </thead>
+            <tbody id="tabella-utenti"></tbody>
+        </table>
+    </div>
+
+    <div id="prestiti-section" class="section">
+        <h2 data-i18n="title_prestiti">📅 Registro Prestiti</h2>
+        <div class="card mb-3">
+            <div class="card-body">
+                <h5 data-i18n="card_prestiti">Registra Prestito</h5>
+                <div class="row g-2">
+                    <div class="col"><input type="number" id="p_utente_id" class="form-control" placeholder="ID Utente" data-i18n="ph_id_ute"></div>
+                    <div class="col"><input type="number" id="p_libro_id" class="form-control" placeholder="ID Libro" data-i18n="ph_id_lib"></div>
+                    <div class="col"><input type="date" id="p_data" class="form-control"></div>
+                    <div class="col-auto"><button onclick="creaPrestito()" class="btn btn-success" data-i18n="btn_registra">Registra</button></div>
+                </div>
+            </div>
+        </div>
+        <table class="table table-striped bg-white rounded shadow-sm">
+            <thead class="table-dark">
+                <tr>
+                    <th data-i18n="th_utente">Utente</th>
+                    <th data-i18n="th_libro">Libro</th>
+                    <th data-i18n="th_data">Data Prestito</th>
+                    <th data-i18n="th_rest">Restituzione</th>
+                    <th data-i18n="th_azioni">Azioni</th>
+                </tr>
+            </thead>
+            <tbody id="tabella-prestiti"></tbody>
+        </table>
+    </div>
+
 </div>
 
-<script>
-    // Funzione per chiamare la TUA API Java
-    function caricaLibri() {
-        fetch('/api/libri') // Chiama il backend
-            .then(response => response.json()) // Converte la risposta in JSON
-            .then(data => {
-                const tabella = document.getElementById('tabella-libri');
-                tabella.innerHTML = ""; // Pulisce la tabella
-                
-                // Per ogni libro ricevuto dal backend...
-                data.forEach(libro => {
-                    // Creiamo una riga HTML
-                    const riga = `
-                        <tr>
-                            <td>${libro.libro_id}</td>
-                            <td>${libro.titolo}</td>
-                            <td>${libro.autore}</td>
-                            <td>${libro.genere_libro}</td>
-                            <td>${libro.anno}</td>
-                        </tr>
-                    `;
-                    tabella.innerHTML += riga;
-                });
-            })
-            .catch(error => console.error('Errore:', error));
-    }
-
-    // Funzione per chiamare il tuo generatore dati
-    function popolaDati() {
-        fetch('/api/setup/popola')
-            .then(response => response.text())
-            .then(messaggio => {
-                alert(messaggio); // Mostra il messaggio del backend
-                caricaLibri(); // Ricarica la tabella
-            });
-    }
-</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="main.js"></script>
 
 </body>
 </html>

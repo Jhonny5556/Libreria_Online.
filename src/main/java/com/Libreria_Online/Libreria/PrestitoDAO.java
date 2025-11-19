@@ -14,34 +14,36 @@ public class PrestitoDAO {
         return DriverManager.getConnection(URL, USER, PASSWORD);
     }
 
-    // 1. READ (JOIN per ottenere nomi e titoli)
+    // 1. READ - MODIFICATO PER GESTIRE LA PASSWORD
     public List<Prestito> getAllPrestiti() {
         List<Prestito> lista = new ArrayList<>();
-        // Questa query unisce le 3 tabelle
+        
+        // Query che unisce le tabelle
         String sql = "SELECT p.*, " +
-                     "u.nome, u.cognome, u.genere, u.eta, " +
+                     "u.nome, u.cognome, u.genere, u.eta, u.ruolo, " + 
                      "l.isbn, l.titolo, l.autore, l.anno, l.genere_libro " +
                      "FROM Prestiti p " +
                      "JOIN Utenti u ON p.utente_rif = u.utente_id " +
                      "JOIN Libri l ON p.libro_rif = l.libro_id " +
-                     "ORDER BY p.prestito_id DESC"; // I più recenti prima
+                     "ORDER BY p.prestito_id DESC"; 
 
         try (Connection conn = connect();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
 
             while (rs.next()) {
-                // Ricostruiamo l'oggetto Utente
+                // QUI ERA L'ERRORE: Dobbiamo creare l'Utente con il NUOVO costruttore (con password)
+                // Passiamo "N/A" (o stringa vuota) come password perché qui non ci serve
                 Utente u = new Utente(
                     rs.getInt("utente_rif"),
                     rs.getString("nome"),
                     rs.getString("cognome"),
                     rs.getString("genere"),
                     rs.getInt("eta"),
-                    rs.getString("ruolo")
+                    rs.getString("ruolo"),
+                    "N/A" // <--- AGGIUNTA QUESTA RIGA FONDAMENTALE
                 );
 
-                // Ricostruiamo l'oggetto Libro
                 Libro l = new Libro(
                     rs.getInt("libro_rif"),
                     rs.getString("isbn"),
@@ -51,7 +53,6 @@ public class PrestitoDAO {
                     rs.getString("genere_libro")
                 );
 
-                // Creiamo il Prestito con gli oggetti dentro
                 Prestito p = new Prestito(
                     rs.getInt("prestito_id"),
                     rs.getString("data_prestito"),
@@ -61,7 +62,11 @@ public class PrestitoDAO {
                 );
                 lista.add(p);
             }
-        } catch (SQLException e) { e.printStackTrace(); }
+        } catch (SQLException e) {
+            // Se c'è un errore, lo stampiamo in console per capire
+            System.out.println("ERRORE LETTURA PRESTITI: " + e.getMessage());
+            e.printStackTrace();
+        }
         return lista;
     }
 
@@ -71,15 +76,17 @@ public class PrestitoDAO {
         try (Connection conn = connect();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             
-            // Prendiamo gli ID dagli oggetti
             pstmt.setInt(1, p.utente.utente_id);
             pstmt.setInt(2, p.libro.libro_id);
             
-            // Convertiamo le date String in SQL Date
-            pstmt.setDate(3, Date.valueOf(p.data_prestito.substring(0, 10))); // "YYYY-MM-DD"
+            if (p.data_prestito == null || p.data_prestito.isEmpty()) {
+                pstmt.setDate(3, new Date(System.currentTimeMillis()));
+            } else {
+                pstmt.setDate(3, Date.valueOf(p.data_prestito));
+            }
             
             if (p.data_restituzione != null && !p.data_restituzione.isEmpty()) {
-                pstmt.setDate(4, Date.valueOf(p.data_restituzione.substring(0, 10)));
+                pstmt.setDate(4, Date.valueOf(p.data_restituzione));
             } else {
                 pstmt.setNull(4, Types.DATE);
             }
@@ -92,28 +99,7 @@ public class PrestitoDAO {
         return p;
     }
 
-    // 3. UPDATE
-    public boolean updatePrestito(Prestito p) {
-        String sql = "UPDATE Prestiti SET utente_rif=?, libro_rif=?, data_prestito=?, data_restituzione=? WHERE prestito_id=?";
-        try (Connection conn = connect();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-
-            pstmt.setInt(1, p.utente.utente_id);
-            pstmt.setInt(2, p.libro.libro_id);
-            pstmt.setDate(3, Date.valueOf(p.data_prestito.substring(0, 10)));
-            
-            if (p.data_restituzione != null && !p.data_restituzione.isEmpty()) {
-                pstmt.setDate(4, Date.valueOf(p.data_restituzione.substring(0, 10)));
-            } else {
-                pstmt.setNull(4, Types.DATE);
-            }
-            
-            pstmt.setInt(5, p.prestito_id);
-            return pstmt.executeUpdate() > 0;
-        } catch (SQLException e) { e.printStackTrace(); return false; }
-    }
-
-    // 4. DELETE
+    // 3. DELETE
     public boolean deletePrestito(int id) {
         String sql = "DELETE FROM Prestiti WHERE prestito_id = ?";
         try (Connection conn = connect();
@@ -122,4 +108,6 @@ public class PrestitoDAO {
             return pstmt.executeUpdate() > 0;
         } catch (SQLException e) { e.printStackTrace(); return false; }
     }
+    
+    public boolean updatePrestito(Prestito p) { return false; } 
 }
