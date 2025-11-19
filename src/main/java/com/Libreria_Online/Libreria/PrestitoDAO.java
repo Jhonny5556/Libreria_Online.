@@ -8,7 +8,7 @@ public class PrestitoDAO {
 
     private static final String URL = "jdbc:postgresql://localhost:5432/Libreria_Online";
     private static final String USER = "postgres";
-    private static final String PASSWORD = "admin"; // <--- LA TUA PASSWORD!
+    private static final String PASSWORD = "admin"; 
 
     private Connection connect() throws SQLException {
         return DriverManager.getConnection(URL, USER, PASSWORD);
@@ -71,7 +71,7 @@ public class PrestitoDAO {
         try (Connection conn = connect();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             
-            // Prendiamo gli ID dagli oggetti annidati
+            // Prendiamo gli ID dagli oggetti
             pstmt.setInt(1, p.utente.utente_id);
             pstmt.setInt(2, p.libro.libro_id);
             

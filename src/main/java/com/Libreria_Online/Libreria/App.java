@@ -1,39 +1,38 @@
 package com.Libreria_Online.Libreria;
 
 import io.javalin.Javalin;
+import io.javalin.http.staticfiles.Location;
 
 public class App {
     public static void main(String[] args) {
         
-        // 1. Inizializziamo i DAO (Gestori del Database)
+        // 1. Inizializziamo i DAO
         LibroDAO libroDAO = new LibroDAO();
-        UtenteDAO utenteDAO = new UtenteDAO(); // <--- NUOVO: Gestore Utenti.
+        UtenteDAO utenteDAO = new UtenteDAO(); // Gestore Utenti.
 
         // 2. Avviamo il Server
         Javalin app = Javalin.create(config -> {
+        	config.staticFiles.add("/public", Location.CLASSPATH);
             config.bundledPlugins.enableCors(cors -> {
                 cors.addRule(it -> {
                     it.anyHost(); 
                 });
             });
         }).start(7070);
-     // --- FUNZIONALITÀ AVANZATA 7: Gestione delle Eccezioni ---
+     // 7: Gestione delle Eccezioni
         app.exception(Exception.class, (e, ctx) -> {
-            // 1. Scriviamo l'errore nella console di Eclipse (per te che sviluppi)
-            System.out.println("🔥 ERRORE CATTURATO: " + e.getMessage());
+            // 1. Scriviamo l'errore nella console di Eclipse 
+            System.out.println(" ERRORE CATTURATO: " + e.getMessage());
             e.printStackTrace();
 
-            // 2. Rispondiamo al Frontend con un messaggio chiaro invece di crashare male
-            ctx.status(500); // 500 = Errore Server
+            // 2. Qui diamo l'errore al posto di iun banale crash al Frontend
+            ctx.status(500); // Errore Server
             ctx.json("{\"errore\": \"Si è verificato un problema nel server: " + e.getMessage() + "\"}");
         });
 
         System.out.println("Server pronto su http://localhost:7070");
 
-        // ==========================================
-        //              API LIBRI
-        // ==========================================
-        
+        // API LIBRi
         app.get("/api/libri", ctx -> ctx.json(libroDAO.getAllLibri()));
 
         app.post("/api/libri", ctx -> {
@@ -62,9 +61,6 @@ public class App {
             }
         });
 
-        // ==========================================
-        //              API UTENTI (NUOVE)
-        // ==========================================
 
         // 1. GET - Lista utenti
         app.get("/api/utenti", ctx -> ctx.json(utenteDAO.getAllUtenti()));
@@ -98,11 +94,7 @@ public class App {
                 ctx.status(404).result("Utente non trovato");
             }
         });
-     // ... (dopo le API Utenti) ...
-
-        // ==========================================
-        //              API PRESTITI (NUOVE)
-        // ==========================================
+        
         PrestitoDAO prestitoDAO = new PrestitoDAO();
 
         app.get("/api/prestiti", ctx -> ctx.json(prestitoDAO.getAllPrestiti()));
@@ -132,10 +124,8 @@ public class App {
             }
         });
 
-        // ==========================================
-        //      FUNZIONALITÀ 5: STATISTICHE 📊
-        // ==========================================
-        // Deve stare qui in fondo perché deve "vedere" tutti i DAO (libro, utente, prestito)
+        //      FUNZIONALITÀ 5:
+        //Ho messso alla fine questa porzione di codice semplicemnete per il fatto che deve leggere tutti(Libro, utente e prestito)
         
         app.get("/api/stats", ctx -> {
             
@@ -144,7 +134,7 @@ public class App {
             int totUtenti = utenteDAO.getAllUtenti().size();
             int totPrestiti = prestitoDAO.getAllPrestiti().size();
 
-            // 2. Crea una stringa JSON a mano
+            // 2. Crea una stringa JSON
             String jsonStats = String.format(
                 "{\"utenti\": %d, \"libri\": %d, \"prestiti\": %d}", 
                 totUtenti, totLibri, totPrestiti
@@ -153,6 +143,19 @@ public class App {
             // 3. Restituisci il JSON
             ctx.json(jsonStats);
         });
+       
+        // FUNZIONALITÀ 2: GENERAZIONE DATI
+        
+        // Qui abbiamo il link oer richiamare il db
+        app.get("/api/setup/popola", ctx -> {
+            
+            GeneratoreDati gen = new GeneratoreDati();
+            
+            // Generiamo 20 utenti e 50 libri(ovviamente possiamo cambiarli signor Ferdinand)
+            gen.popolaDatabase(20, 50);
+            
+            ctx.result(" Database popolato con successo! Ho creato 20 utenti e 50 libri finti.");
+        });
 
-    } // <--- Fine del main
-} // <--- Fine della classe App
+    } 
+} 

@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <title>Libreria Online</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+<div class="container mt-5">
+    <h1 class="text-center mb-4">📚 Gestione Libreria</h1>
+
+    <div class="text-center mb-4">
+        <button onclick="caricaLibri()" class="btn btn-primary">Mostra Libri</button>
+        <button onclick="popolaDati()" class="btn btn-warning">Popola Database (Generatore)</button>
+    </div>
+
+    <table class="table table-striped bg-white shadow-sm rounded">
+        <thead class="table-dark">
+            <tr>
+                <th>ID</th>
+                <th>Titolo</th>
+                <th>Autore</th>
+                <th>Genere</th>
+                <th>Anno</th>
+            </tr>
+        </thead>
+        <tbody id="tabella-libri">
+            </tbody>
+    </table>
+</div>
+
+<script>
+    // Funzione per chiamare la TUA API Java
+    function caricaLibri() {
+        fetch('/api/libri') // Chiama il backend
+            .then(response => response.json()) // Converte la risposta in JSON
+            .then(data => {
+                const tabella = document.getElementById('tabella-libri');
+                tabella.innerHTML = ""; // Pulisce la tabella
+                
+                // Per ogni libro ricevuto dal backend...
+                data.forEach(libro => {
+                    // Creiamo una riga HTML
+                    const riga = `
+                        <tr>
+                            <td>${libro.libro_id}</td>
+                            <td>${libro.titolo}</td>
+                            <td>${libro.autore}</td>
+                            <td>${libro.genere_libro}</td>
+                            <td>${libro.anno}</td>
+                        </tr>
+                    `;
+                    tabella.innerHTML += riga;
+                });
+            })
+            .catch(error => console.error('Errore:', error));
+    }
+
+    // Funzione per chiamare il tuo generatore dati
+    function popolaDati() {
+        fetch('/api/setup/popola')
+            .then(response => response.text())
+            .then(messaggio => {
+                alert(messaggio); // Mostra il messaggio del backend
+                caricaLibri(); // Ricarica la tabella
+            });
+    }
+</script>
+
+</body>
+</html>

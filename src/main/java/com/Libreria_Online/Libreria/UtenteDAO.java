@@ -8,7 +8,7 @@ public class UtenteDAO {
 
     private static final String URL = "jdbc:postgresql://localhost:5432/Libreria_Online";
     private static final String USER = "postgres";
-    private static final String PASSWORD = "admin"; // <--- CONTROLLA LA TUA PASSWORD
+    private static final String PASSWORD = "admin"; 
 
     private Connection connect() throws SQLException {
         return DriverManager.getConnection(URL, USER, PASSWORD);
@@ -70,13 +70,13 @@ public class UtenteDAO {
             pstmt.setString(2, u.cognome);
             pstmt.setString(3, u.genere);
             pstmt.setInt(4, u.eta);
-            pstmt.setString(5, u.ruolo); // <--- Aggiorniamo anche il ruolo
+            pstmt.setString(5, u.ruolo);
             pstmt.setInt(6, u.utente_id);
             return pstmt.executeUpdate() > 0;
         } catch (SQLException e) { e.printStackTrace(); return false; }
     }
 
-    // 4. DELETE - RIMANE UGUALE (Si cancella per ID)
+    // 4. DELETE - (Cancellazione  per ID)
     public boolean deleteUtente(int id) {
         String sql = "DELETE FROM Utenti WHERE utente_id = ?";
         try (Connection conn = connect();
